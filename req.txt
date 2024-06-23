@@ -48,7 +48,6 @@ langchain-community==0.2.5
 langchain-core==0.2.9
 langchain-text-splitters==0.2.1
 langsmith==0.1.81
-llama_cpp_python==0.2.79
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 marshmallow==3.21.3
