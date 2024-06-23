@@ -30,7 +30,7 @@ llm = LlamaCpp(
 
 llm_chain = prompt | llm
 question = "What NFL team won the Super Bowl in the year Justin Bieber was born?"
-llm_chain.invoke({"question": question})
+print(prompt({"question": question}))
 # from llama_cpp import Llama
 # model = "/Users/vishwa-21387/Documents/code/zenchat/server/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf"  # instruction model
 # llm = Llama(model_path=model, n_batch=512, n_threads=7, n_gpu_layers=7, verbose=True)
