@@ -20,7 +20,7 @@ n_batch = 512  # Should be between 1 and n_ctx, consider the amount of VRAM in y
 
 # # Make sure the model path is correct for your system!
 llm = LlamaCpp(
-    model_path="/Users/vishwa-21387/Documents/code/zenchat/server/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf",
+    model_path="../mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf",
     n_gpu_layers=n_gpu_layers,
     n_batch=n_batch,
     f16_kv=True,  # MUST set to True, otherwise you will run into problem after a couple of calls
