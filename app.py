@@ -2,7 +2,8 @@ from langchain_community.llms import LlamaCpp
 from langchain_core.callbacks import CallbackManager, StreamingStdOutCallbackHandler
 from langchain_core.prompts import PromptTemplate
 import streamlit as st
-
+from langchain_chroma import Chroma
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 
 # template = """Question: {question}
 
@@ -11,6 +12,11 @@ E_INST = "[/INST]"
 B_SYS = "<s>"
 E_SYS = "<\s>"
 
+st.set_page_config(
+    page_title="ZenChat",
+    page_icon="🤖",
+    layout="wide"
+)
 
 # # Answer: Let's work this out in a step by step way to be sure we have the right answer."""
 
@@ -43,11 +49,21 @@ def gen_prompt(question: str):
     return prompt
 
 
-st.set_page_config(
-    page_title="ZenChat",
-    page_icon="🤖",
-    layout="wide"
-)
+model_name = "BAAI/bge-small-en"
+model_kwargs = {"device": "mps"}
+encode_kwargs = {"normalize_embeddings": True}
+
+@st.cache_resource
+def return_db():
+    emb_func = HuggingFaceBgeEmbeddings(
+        model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs
+    )
+    db = Chroma(persist_directory="./chroma_db", embedding_function=emb_func)
+    return db
+
+
+
+db = return_db()
 
 st.title("ZenChat")
 
@@ -70,9 +86,12 @@ if user_prompt is not None:
     with st.chat_message("user"):
         st.write(user_prompt)
 
-    response = user_prompt
+    docs = db.similarity_search(user_prompt)
+
+    response = "{}\n".format(docs)
     
     with st.chat_message("assistant"):
+        st.session_state.messages.append({"role": "assistant", "content": response})
         st.write(response)
 
 print(type(st.session_state.messages))
