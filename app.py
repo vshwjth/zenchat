@@ -9,8 +9,11 @@ from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 
 B_INST = "[INST]"
 E_INST = "[/INST]"
-B_SYS = "<s>"
-E_SYS = "<\s>"
+B_S = "<s>"
+E_S = "<\s>"
+B_SYS = "<<SYS>>"
+E_SYS = "<</SYS>>"
+SYSTEM_PROMPT = "You are are a helpful... bla bla.. assistant"
 
 st.set_page_config(
     page_title="ZenChat",
@@ -43,7 +46,7 @@ st.set_page_config(
 # # question = "What NFL team won the Super Bowl in the year Justin Bieber was born?"
 # llm.invoke()
 
-def gen_prompt(question: str):
+def gen_prompt(docs):
     prompt = ""
 
     return prompt
@@ -88,6 +91,8 @@ if user_prompt is not None:
 
     docs = db.similarity_search(user_prompt)
 
+    final_prompt = gen_prompt(docs)
+    
     response = "{}\n".format(docs)
     
     with st.chat_message("assistant"):
