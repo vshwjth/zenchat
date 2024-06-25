@@ -15,7 +15,7 @@ B_SYS = "<<SYS>>"
 E_SYS = "<</SYS>>"
 NL = "\n"
 SYSTEM_PROMPT = """You are are a helpful mental health assistant chat bot. Stay helpful and kind while answering. Keep your answers limited to 3-4 sentences. 
-If the asked question is not relate to mental health or adjacent topics, tell them you can not answer. There is context given followed by a query. use the context to answer the question. Remain factful and state when the answer is unknown and cannot be inferred."""
+If the asked question is not relate to mental health or adjacent topics, tell them you can not answer. There is context given followed by a query. use the context to answer the question. Remain factful and state when the answer is unknown and cannot be inferred. Keep your answers summarized and short"""
 
 st.set_page_config(
     page_title="ZenChat",
@@ -28,11 +28,11 @@ st.set_page_config(
 
 # prompt = PromptTemplate.from_template(template)
 
-# # # Callbacks support token-wise streaming
-# callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+# # Callbacks support token-wise streaming
+callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
 
-# n_gpu_layers = -1  # The number of layers to put on the GPU. The rest will be on the CPU. If you don't know how many layers there are, you can use -1 to move all to GPU.
-# n_batch = 512  # Should be between 1 and n_ctx, consider the amount of VRAM in your GPU.
+n_gpu_layers = -1  # The number of layers to put on the GPU. The rest will be on the CPU. If you don't know how many layers there are, you can use -1 to move all to GPU.
+n_batch = 1024  # Should be between 1 and n_ctx, consider the amount of VRAM in your GPU.
 
 @st.cache_resource
 def return_llm():
@@ -41,8 +41,10 @@ def return_llm():
     #     model_path="../mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf",
     #     n_gpu_layers=n_gpu_layers,
     #     n_batch=n_batch,
-    #     f16_kv=True,  # MUST set to True, otherwise you will run into problem after a couple of calls
+    #     n_ctx=2048,
+    #     f16_kv=True,# MUST set to True, otherwise you will run into problem after a couple of calls
     #     callback_manager=callback_manager,
+    #     max_tokens = 1200,
     #     verbose=True,  # Verbose is required to pass to the callback manager
     # )
     return llm
@@ -66,15 +68,15 @@ def gen_prompt(docs):
     # print(msgs)
     # print(len(msgs))
     if len(msgs) < 3:   
-        prompt = B_S  + B_INST + " " +  B_SYS + NL + SYSTEM_PROMPT + NL + E_SYS + NL + context + NL+ msgs[-1]['content'] + " " + E_INST
+        prompt = B_S  + B_INST + " " +  B_SYS + NL + SYSTEM_PROMPT + context +  NL + E_SYS + NL  + NL+ msgs[-1]['content'] + " " + E_INST
     else:
-        prompt = B_S  + B_INST + " " +  B_SYS + NL + SYSTEM_PROMPT + NL + E_SYS + NL + msgs[-3]['content'] + E_INST + " " + msgs[-2]['content'] + " " + E_S + " " + B_S + B_INST + " " + NL + context +  msgs[-1]['content'] + E_INST
+        prompt = B_S  + B_INST + " " +  B_SYS + NL + SYSTEM_PROMPT  + context   + NL + E_SYS + NL + msgs[-3]['content'] + E_INST + " " + msgs[-2]['content'] + " " + E_S + " " + B_S + B_INST + " " + NL + msgs[-1]['content'] + E_INST
     print(prompt + "\n")
     return prompt
 
 
 model_name = "BAAI/bge-small-en"
-model_kwargs = {"device": "mps"}
+model_kwargs = {"device": "cuda"}
 encode_kwargs = {"normalize_embeddings": True}
 
 @st.cache_resource
@@ -113,8 +115,9 @@ if user_prompt is not None:
     docs = db.similarity_search(user_prompt)
 
     final_prompt = gen_prompt(docs)
-    
-    response = "template response"
+
+    llm =return_llm()
+    response = llm.invoke(final_prompt)
     
     with st.chat_message("assistant"):
         st.session_state.messages.append({"role": "assistant", "content": response})
